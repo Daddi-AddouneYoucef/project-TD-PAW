@@ -1,80 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Student Attendance System</title>
-<style>
-body {font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f7f7f7;}
-nav {background: #333; padding: 10px;}
-nav ul {list-style: none; margin: 0; padding: 0; display: flex;}
-nav ul li {margin-right: 20px;}
-nav ul li a {color: white; text-decoration: none; font-weight: bold;}
-nav ul li a:hover {text-decoration: underline;}
-.container {width: 90%; margin: 20px auto; background: white; padding: 20px; border-radius: 8px;}
-table {width: 100%; border-collapse: collapse; margin-bottom: 30px;}
-th, td {border: 1px solid #ccc; padding: 10px; text-align: left;}
-th {background: #eee;}
-form {display: flex; flex-direction: column; width: 300px;}
-label {margin-bottom: 5px; font-weight: bold;}
-input[type="text"], input[type="email"] {margin-bottom: 10px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;}
-input[type="submit"] {background: #333; color: white; padding: 8px; border: none; border-radius: 4px; cursor: pointer;}
-input[type="submit"]:hover {background: #555;}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Manager</title>
+    <link rel="stylesheet" href="TP1.css">
 </head>
 <body>
-<nav>
-<ul>
-<li><a href="#">Home</a></li>
-<li><a href="#">Attendance List</a></li>
-<li><a href="#">Add Student</a></li>
-<li><a href="#">Reports</a></li>
-<li><a href="#">Logout</a></li>
-</ul>
-</nav>
-<div class="container">
-<h2>Student Attendance List</h2>
-<table>
-<tr>
-<th>Student ID</th>
-<th>Last Name</th>
-<th>First Name</th>
-<th>Course</th>
-<th>Session Date</th>
-<th>Present</th>
-<th>Participated</th>
-</tr>
-<tr>
-<td>001</td>
-<td>Smith</td>
-<td>John</td>
-<td>Web Programming</td>
-<td>2025-10-29</td>
-<td>Yes</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>002</td>
-<td>Doe</td>
-<td>Jane</td>
-<td>Web Programming</td>
-<td>2025-10-29</td>
-<td>No</td>
-<td>Yes</td>
-</tr>
-</table>
-<h2>Add New Student</h2>
-<form>
-<label>Student ID</label>
-<input type="text" name="student_id" required>
-<label>Last Name</label>
-<input type="text" name="last_name" required>
-<label>First Name</label>
-<input type="text" name="first_name" required>
-<label>Email</label>
-<input type="email" name="email" required>
-<input type="submit" value="Submit">
-</form>
-</div>
+
+    <div class="container">
+        
+        <header class="header">
+            <div class="title-group">
+                <h1>Class Tracker</h1>
+                <p>Monitor student progress & participation</p>
+            </div>
+            <a href="#add-area" class="btn-add">
+                <span style="font-size:1.2rem; line-height:0;">+</span> New Student
+            </a>
+        </header>
+
+        <div id="toast">
+            <div style="background:#10b981; width:8px; height:8px; border-radius:50%;"></div>
+            <span id="toast-msg">Saved successfully</span>
+        </div>
+
+        <div class="glass-card">
+            <div class="table-wrapper">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th class="col-sticky" rowspan="2" style="padding-left:20px;">Student Name</th>
+                            <th colspan="2" class="text-center">Week 1</th>
+                            <th colspan="2" class="text-center">Week 2</th>
+                            <th colspan="2" class="text-center">Week 3</th>
+                            <th colspan="2" class="text-center">Week 4</th>
+                            <th colspan="2" class="text-center">Week 5</th>
+                            <th colspan="2" class="text-center">Week 6</th>
+                            <th rowspan="2" style="text-align:center;">Insights</th>
+                        </tr>
+                        <tr>
+                            <th class="th-small">Pr</th><th class="th-small">Pa</th>
+                            <th class="th-small">Pr</th><th class="th-small">Pa</th>
+                            <th class="th-small">Pr</th><th class="th-small">Pa</th>
+                            <th class="th-small">Pr</th><th class="th-small">Pa</th>
+                            <th class="th-small">Pr</th><th class="th-small">Pa</th>
+                            <th class="th-small">Pr</th><th class="th-small">Pa</th>
+                        </tr>
+                    </thead>
+                    <tbody id="student-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="add-area" class="add-section">
+            <h3 style="margin-bottom:20px; font-weight:700;">Add New Student</h3>
+            
+            <form id="addStudentForm">
+                <div class="input-group" style="margin-bottom:20px;">
+                    <label>Student ID</label>
+                    <input type="text" id="sid" class="modern-input" placeholder="e.g. 2024001" required>
+                </div>
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label>Last Name</label>
+                        <input type="text" id="lname" class="modern-input" required>
+                    </div>
+                    <div class="input-group">
+                        <label>First Name</label>
+                        <input type="text" id="fname" class="modern-input" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-add" style="width:100%; justify-content:center; padding:14px; border:none; cursor:pointer; margin-top: 15px;">
+                    Add Student
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+    <script src="TP1.js"></script>
+    
 </body>
 </html>
