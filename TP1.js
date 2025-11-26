@@ -5,11 +5,10 @@ const AttendanceApp = {
             warn:   { class: 'status-warning', bg: '#fef3c7', gradient: 'linear-gradient(135deg, #f59e0b, #d97706)' }, 
             danger: { class: 'status-danger',  bg: '#fee2e2', gradient: 'linear-gradient(135deg, #ef4444, #b91c1c)' } 
         },
-        thresholds: {
-            warn: 1, 
-            danger: 3 
-        },
-        apiEndpoint: 'attendance.php'
+        thresholds: { warn: 1, danger: 3 },
+        apiEndpoint: 'attendance.php',
+        saveEndpoint: 'save_student.php',
+        dataEndpoint: 'students.json'
     },
 
     state: {
@@ -20,18 +19,18 @@ const AttendanceApp = {
         this.cacheDOM();
         this.bindEvents();
         this.injectToolbar(); 
-        this.refreshAllStats();
-        console.log('Attendance App Initialized 🚀');
+        this.loadStudents();
     },
 
     cacheDOM() {
         this.dom = {
             table: document.querySelector('.modern-table'),
-            tbody: document.querySelector('tbody'),
+            tbody: document.getElementById('student-table-body'),
             rows: document.querySelectorAll('tbody tr'),
             toast: document.getElementById('toast'),
             toastMsg: document.getElementById('toast-msg'),
-            header: document.querySelector('.header')
+            header: document.querySelector('.header'),
+            addForm: document.getElementById('addStudentForm')
         };
     },
 
@@ -43,6 +42,100 @@ const AttendanceApp = {
                 }
             });
         }
+
+        if (this.dom.addForm) {
+            this.dom.addForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleNewStudentSubmit();
+            });
+        }
+    },
+
+    loadStudents() {
+        fetch(this.config.dataEndpoint + '?t=' + new Date().getTime())
+            .then(res => res.json())
+            .then(students => {
+                this.dom.tbody.innerHTML = '';
+                students.forEach(student => {
+                    this.renderRow(student);
+                });
+                this.refreshAllStats();
+            })
+            .catch(err => console.error(err));
+    },
+
+    handleNewStudentSubmit() {
+        const sid = document.getElementById('sid').value;
+        const fname = document.getElementById('fname').value;
+        const lname = document.getElementById('lname').value;
+
+        const newStudent = { id: sid, fname: fname, lname: lname };
+
+        fetch(this.config.saveEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newStudent)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'success') {
+                this.renderRow(newStudent);
+                this.dom.addForm.reset();
+                this.showToast("Student Added & Saved!");
+                this.refreshAllStats();
+            } else {
+                this.showToast("Error saving file", true);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            this.showToast("Server Error", true);
+        });
+    },
+
+    renderRow(student) {
+        const tr = document.createElement('tr');
+        tr.dataset.id = student.id;
+        
+        // Ensure attendance object exists
+        const att = student.attendance || {};
+
+        let weeksHTML = '';
+        for(let i=1; i<=6; i++) {
+            // Check the keys w1_present, w1_participated, etc.
+            const isPres = att[`w${i}_present`] ? 'checked' : '';
+            const isPart = att[`w${i}_participated`] ? 'checked' : '';
+
+            weeksHTML += `
+                <td class="text-center">
+                    <input type="checkbox" data-sid="${student.id}" data-week="${i}" data-type="present" ${isPres}>
+                </td>
+                <td class="text-center">
+                    <input type="checkbox" data-sid="${student.id}" data-week="${i}" data-type="participated" ${isPart}>
+                </td>
+            `;
+        }
+
+        tr.innerHTML = `
+            <td class="col-sticky">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div class="avatar" style="width:35px; height:35px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-weight:bold; color:white; font-size:0.9rem;">
+                        ${student.fname.charAt(0)}${student.lname.charAt(0)}
+                    </div>
+                    <div>
+                        <div style="font-weight:600; color:#0f172a;">${student.lname}, ${student.fname}</div>
+                        <div style="font-size:0.8rem; color:#64748b;">ID: ${student.id}</div>
+                    </div>
+                </div>
+            </td>
+            ${weeksHTML}
+            <td class="text-center">
+                <div style="font-weight:700; color:#ef4444;" class="absences">0</div>
+                <div style="font-size:0.75rem; color:#64748b;">Absences</div>
+            </td>
+        `;
+
+        this.dom.tbody.appendChild(tr);
     },
 
     injectToolbar() {
@@ -89,10 +182,10 @@ const AttendanceApp = {
     refreshAllStats() {
         let totalStudents = 0;
         let totalAtRisk = 0;
+        
+        const currentRows = document.querySelectorAll('tbody tr'); 
 
-        this.dom.rows.forEach(row => {
-            if(!row.dataset.id) return; 
-            
+        currentRows.forEach(row => {
             const stats = this.calculateRowStats(row);
             this.updateRowVisuals(row, stats);
             
@@ -105,9 +198,7 @@ const AttendanceApp = {
 
     updateRowVisuals(row, stats) {
         const absEl = row.querySelector('.absences');
-        const partEl = row.querySelector('.participation');
         if(absEl) absEl.textContent = stats.abs;
-        if(partEl) partEl.textContent = stats.part;
 
         const avatar = row.querySelector('.avatar');
         const stickyCol = row.querySelector('.col-sticky');
@@ -175,11 +266,7 @@ const AttendanceApp = {
         })
         .then(res => res.text())
         .then(txt => {
-            if (txt.includes('saved')) {
-                this.showToast("Saved successfully");
-            } else {
-                throw new Error(txt);
-            }
+            this.showToast("Saved successfully");
         })
         .catch(err => {
             console.error(err);
@@ -190,7 +277,7 @@ const AttendanceApp = {
 
     filterStudents(query) {
         const lowerQuery = query.toLowerCase();
-        this.dom.rows.forEach(row => {
+        document.querySelectorAll('tbody tr').forEach(row => {
             const text = row.querySelector('.col-sticky')?.innerText.toLowerCase() || "";
             if (text.includes(lowerQuery)) {
                 row.style.display = '';
@@ -217,7 +304,6 @@ const AttendanceApp = {
                 checks.forEach(c => cols.push(c.checked ? "1" : "0"));
 
                 cols.push(row.querySelector('.absences')?.innerText || "0");
-                cols.push(row.querySelector('.participation')?.innerText || "0");
             }
             csv.push(cols.join(","));
         });
