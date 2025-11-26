@@ -1,0 +1,93 @@
+[
+  {
+    "id": "2024001",
+    "fname": "Yasmine",
+    "lname": "Benali",
+    "attendance": {
+      "w1_present": true, "w1_participated": true,
+      "w2_present": true, "w2_participated": true,
+      "w3_present": true, "w3_participated": true,
+      "w4_present": true, "w4_participated": true,
+      "w5_present": true, "w5_participated": false,
+      "w6_present": true, "w6_participated": true
+    }
+  },
+  {
+    "id": "2024002",
+    "fname": "Mohamed",
+    "lname": "Saidi",
+    "attendance": {
+      "w1_present": true, "w1_participated": false,
+      "w2_present": false, "w2_participated": false,
+      "w3_present": true, "w3_participated": true,
+      "w4_present": true, "w4_participated": false,
+      "w5_present": true, "w5_participated": false,
+      "w6_present": true, "w6_participated": true
+    }
+  },
+  {
+    "id": "2024003",
+    "fname": "Anes",
+    "lname": "Dahmani",
+    "attendance": {
+      "w1_present": false, "w1_participated": false,
+      "w2_present": false, "w2_participated": false,
+      "w3_present": false, "w3_participated": false,
+      "w4_present": true, "w4_participated": false,
+      "w5_present": false, "w5_participated": false,
+      "w6_present": true, "w6_participated": false
+    }
+  },
+  {
+    "id": "2024004",
+    "fname": "Meriem",
+    "lname": "Bouzid",
+    "attendance": {
+      "w1_present": true, "w1_participated": true,
+      "w2_present": true, "w2_participated": false,
+      "w3_present": true, "w3_participated": true,
+      "w4_present": true, "w4_participated": true,
+      "w5_present": true, "w5_participated": true,
+      "w6_present": true, "w6_participated": false
+    }
+  },
+  {
+    "id": "2024005",
+    "fname": "Ryad",
+    "lname": "Cherif",
+    "attendance": {
+      "w1_present": true, "w1_participated": false,
+      "w2_present": true, "w2_participated": false,
+      "w3_present": false, "w3_participated": false,
+      "w4_present": false, "w4_participated": false,
+      "w5_present": true, "w5_participated": false,
+      "w6_present": true, "w6_participated": false
+    }
+  },
+  {
+    "id": "2024006",
+    "fname": "Lina",
+    "lname": "Mansouri",
+    "attendance": {
+      "w1_present": true, "w1_participated": true,
+      "w2_present": true, "w2_participated": true,
+      "w3_present": true, "w3_participated": true,
+      "w4_present": true, "w4_participated": true,
+      "w5_present": true, "w5_participated": true,
+      "w6_present": true, "w6_participated": true
+    }
+  },
+  {
+    "id": "2024007",
+    "fname": "Sofiane",
+    "lname": "Ouali",
+    "attendance": {
+        "w1_present": false, "w1_participated": false,
+        "w2_present": true, "w2_participated": false,
+        "w3_present": true, "w3_participated": false,
+        "w4_present": true, "w4_participated": false,
+        "w5_present": true, "w5_participated": false,
+        "w6_present": true, "w6_participated": false
+      }
+  }
+]
