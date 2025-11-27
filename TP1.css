@@ -82,47 +82,52 @@ body {
     background: #000;
 }
 
-.header + div {
-    background: var(--bg-card);
-    padding: 1rem;
+.controls-panel {
+    background: white;
+    padding: 20px;
     border-radius: var(--radius);
     border: 1px solid var(--border);
+    margin-bottom: 20px;
     box-shadow: var(--shadow-sm);
-    margin-bottom: 2rem !important;
-    align-items: center;
 }
 
-.header + div input {
-    font-size: 0.95rem;
-    border: 1px solid var(--border) !important;
-    background: #f8fafc !important;
-    transition: all 0.2s;
-}
-.header + div input:focus {
-    outline: none;
-    border-color: var(--primary) !important;
-    background: white !important;
-    box-shadow: 0 0 0 3px var(--primary-soft);
+.controls-panel h3 {
+    font-size: 1rem;
+    margin-bottom: 15px;
+    color: var(--primary);
 }
 
-.header + div button {
-    background: white !important;
-    color: var(--text-main) !important;
-    border: 1px solid var(--border) !important;
-    transition: all 0.2s;
-}
-.header + div button:hover {
-    background: var(--bg-body) !important;
-    border-color: var(--text-muted) !important;
+.control-row { margin-bottom: 12px; }
+
+.buttons-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
-#stats-summary {
-    background: #f1f5f9;
+.btn-secondary {
+    background: var(--primary);
+    color: white;
+    border: none;
     padding: 8px 16px;
     border-radius: 6px;
+    cursor: pointer;
     font-weight: 500;
-    justify-content: flex-end;
+    transition: 0.2s;
 }
+.btn-secondary:hover { background: var(--primary-hover); }
+
+.btn-outline {
+    background: white;
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: 0.2s;
+}
+.btn-outline:hover { border-color: var(--text-muted); background: #f1f5f9; }
 
 .glass-card {
     background: var(--bg-card);
@@ -191,12 +196,6 @@ body {
     vertical-align: middle;
 }
 
-.student-profile {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 16px;
-}
 .avatar {
     width: 38px;
     height: 38px;
@@ -211,71 +210,37 @@ body {
     flex-shrink: 0;
     transition: background 0.3s;
 }
-.student-info div:first-child { font-weight: 600; color: var(--text-main); font-size: 0.9rem; }
-.student-info div:last-child { font-size: 0.75rem; color: var(--text-muted); }
 
-.toggle-wrapper {
-    position: relative;
-    display: inline-block;
-    width: 22px;
-    height: 22px;
-}
-.toggle-wrapper input { opacity: 0; width: 0; height: 0; }
-
-.toggle-check {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: white;
-    border: 2px solid #cbd5e1;
-    border-radius: 6px;
+input[type="checkbox"] {
+    accent-color: var(--primary);
+    width: 16px;
+    height: 16px;
     cursor: pointer;
-    transition: all 0.2s ease;
 }
 
-.toggle-wrapper:hover .toggle-check { border-color: var(--primary); }
+tr { transition: background 0.2s, transform 0.1s; }
 
-input.chk-present:checked + .toggle-check {
-    background-color: var(--primary);
-    border-color: var(--primary);
-    transform: scale(1.1);
+tr.jq-hover {
+    background-color: #e0e7ff !important;
+    cursor: pointer;
+}
+tr.jq-hover .col-sticky {
+    background-color: #e0e7ff !important;
 }
 
-input.chk-participated:checked + .toggle-check {
-    background-color: var(--success);
-    border-color: var(--success);
-    border-radius: 50%;
-    transform: scale(1.1);
+@keyframes pulseGreen {
+    0% { background-color: rgba(16, 185, 129, 0.1); }
+    50% { background-color: rgba(16, 185, 129, 0.3); }
+    100% { background-color: rgba(16, 185, 129, 0.1); }
 }
 
-input:checked + .toggle-check::after {
-    content: '';
-    position: absolute;
-    left: 6px; top: 2px;
-    width: 5px; height: 10px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
+.excellent-student {
+    animation: pulseGreen 2s infinite;
 }
-
-.stat-pill {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 0.7rem;
-    font-weight: 700;
-    min-width: 50px;
+.excellent-student .col-sticky {
+    animation: pulseGreen 2s infinite;
+    border-left: 5px solid var(--success) !important;
 }
-.stat-abs { background: var(--danger-bg); color: var(--danger); margin-bottom: 2px; }
-.stat-part { background: var(--success-bg); color: #065f46; }
-
-tr { transition: background 0.2s; }
-tr:hover td { background-color: #f1f5f9; }
-tr:hover .col-sticky { background-color: #f1f5f9; }
-
-.col-sticky { border-left: 4px solid transparent; }
-tr.status-good .col-sticky { border-left-color: var(--success); }
-tr.status-warning .col-sticky { border-left-color: var(--warn); }
-tr.status-danger .col-sticky { border-left-color: var(--danger); }
 
 .add-section {
     background: var(--bg-card);
