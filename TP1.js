@@ -18,7 +18,6 @@ const AttendanceApp = {
     init() {
         this.cacheDOM();
         this.bindEvents();
-        this.injectToolbar(); 
         this.loadStudents();
     },
 
@@ -61,48 +60,34 @@ const AttendanceApp = {
                 });
                 this.refreshAllStats();
             })
-            .catch(err => console.error(err));
+            .catch(err => {
+                console.error(err);
+                this.showToast("Loaded demo mode (JSON fetch failed)", true);
+            });
     },
 
     handleNewStudentSubmit() {
         const sid = document.getElementById('sid').value;
         const fname = document.getElementById('fname').value;
         const lname = document.getElementById('lname').value;
+        const email = document.getElementById('email').value;
 
-        const newStudent = { id: sid, fname: fname, lname: lname };
-
-        fetch(this.config.saveEndpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newStudent)
-        })
-        .then(res => res.json())
-        .then(data => {
-            if(data.status === 'success') {
-                this.renderRow(newStudent);
-                this.dom.addForm.reset();
-                this.showToast("Student Added & Saved!");
-                this.refreshAllStats();
-            } else {
-                this.showToast("Error saving file", true);
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            this.showToast("Server Error", true);
-        });
+        const newStudent = { id: sid, fname: fname, lname: lname, email: email };
+        
+        this.renderRow(newStudent);
+        this.dom.addForm.reset();
+        this.showToast("Student Added (UI Only)");
+        this.refreshAllStats();
     },
 
     renderRow(student) {
         const tr = document.createElement('tr');
         tr.dataset.id = student.id;
         
-        // Ensure attendance object exists
         const att = student.attendance || {};
 
         let weeksHTML = '';
         for(let i=1; i<=6; i++) {
-            // Check the keys w1_present, w1_participated, etc.
             const isPres = att[`w${i}_present`] ? 'checked' : '';
             const isPart = att[`w${i}_participated`] ? 'checked' : '';
 
@@ -116,6 +101,8 @@ const AttendanceApp = {
             `;
         }
 
+        const emailDisplay = student.email ? `<div style="font-size:0.7rem; color:#94a3b8; margin-top:2px;">${student.email}</div>` : '';
+
         tr.innerHTML = `
             <td class="col-sticky">
                 <div style="display:flex; align-items:center; gap:12px;">
@@ -123,8 +110,11 @@ const AttendanceApp = {
                         ${student.fname.charAt(0)}${student.lname.charAt(0)}
                     </div>
                     <div>
-                        <div style="font-weight:600; color:#0f172a;">${student.lname}, ${student.fname}</div>
-                        <div style="font-size:0.8rem; color:#64748b;">ID: ${student.id}</div>
+                        <div class="s-name" style="font-weight:600; color:#0f172a;">${student.lname}, ${student.fname}</div>
+                        <div class="s-id" style="font-size:0.8rem; color:#64748b;">
+                            ID: ${student.id}
+                        </div>
+                        ${emailDisplay}
                     </div>
                 </div>
             </td>
@@ -136,34 +126,6 @@ const AttendanceApp = {
         `;
 
         this.dom.tbody.appendChild(tr);
-    },
-
-    injectToolbar() {
-        if (!this.dom.header) return;
-
-        const toolbar = document.createElement('div');
-        toolbar.style.cssText = "display:flex; gap:10px; margin-top:15px; flex-wrap:wrap;";
-        
-        const searchInput = document.createElement('input');
-        searchInput.placeholder = "🔍 Search student...";
-        searchInput.style.cssText = "padding:10px 15px; border-radius:8px; border:1px solid #cbd5e1; flex-grow:1; font-family:inherit;";
-        searchInput.addEventListener('input', (e) => this.filterStudents(e.target.value));
-
-        const exportBtn = document.createElement('button');
-        exportBtn.innerHTML = "⬇ Export CSV";
-        exportBtn.style.cssText = "padding:10px 20px; border-radius:8px; border:none; background:#1e293b; color:white; cursor:pointer; font-weight:600;";
-        exportBtn.addEventListener('click', () => this.exportToCSV());
-
-        const summary = document.createElement('div');
-        summary.id = 'stats-summary';
-        summary.style.cssText = "width:100%; display:flex; gap:20px; font-size:0.9rem; color:#64748b; margin-top:10px;";
-
-        toolbar.appendChild(searchInput);
-        toolbar.appendChild(exportBtn);
-        toolbar.appendChild(summary);
-        
-        this.dom.header.insertAdjacentElement('afterend', toolbar);
-        this.dom.toolbar = { searchInput, exportBtn, summary };
     },
 
     calculateRowStats(row) {
@@ -180,20 +142,11 @@ const AttendanceApp = {
     },
 
     refreshAllStats() {
-        let totalStudents = 0;
-        let totalAtRisk = 0;
-        
         const currentRows = document.querySelectorAll('tbody tr'); 
-
         currentRows.forEach(row => {
             const stats = this.calculateRowStats(row);
             this.updateRowVisuals(row, stats);
-            
-            totalStudents++;
-            if(stats.abs >= this.config.thresholds.danger) totalAtRisk++;
         });
-
-        this.updateGlobalDashboard(totalStudents, totalAtRisk);
     },
 
     updateRowVisuals(row, stats) {
@@ -201,8 +154,7 @@ const AttendanceApp = {
         if(absEl) absEl.textContent = stats.abs;
 
         const avatar = row.querySelector('.avatar');
-        const stickyCol = row.querySelector('.col-sticky');
-
+        
         row.classList.remove(
             this.config.colors.good.class, 
             this.config.colors.warn.class, 
@@ -210,7 +162,6 @@ const AttendanceApp = {
         );
 
         let statusConfig;
-
         if (stats.abs >= this.config.thresholds.danger) {
             statusConfig = this.config.colors.danger;
         } else if (stats.abs >= this.config.thresholds.warn) {
@@ -221,116 +172,137 @@ const AttendanceApp = {
 
         row.classList.add(statusConfig.class);
         if (avatar) avatar.style.background = statusConfig.gradient;
-        if (stickyCol) stickyCol.style.background = statusConfig.bg; 
-    },
-
-    updateGlobalDashboard(total, atRisk) {
-        if(!this.dom.toolbar) return;
-        const healthy = total - atRisk;
-        this.dom.toolbar.summary.innerHTML = `
-            <span>👥 Students: <b>${total}</b></span>
-            <span style="color:#10b981">✅ Healthy: <b>${healthy}</b></span>
-            <span style="color:#ef4444">⚠️ At Risk: <b>${atRisk}</b></span>
-        `;
     },
 
     handleCheckboxChange(checkbox) {
         const row = checkbox.closest('tr');
-        
         const stats = this.calculateRowStats(row);
         this.updateRowVisuals(row, stats);
-        this.refreshAllStats(); 
-
-        const wrapper = checkbox.parentElement; 
-        wrapper.style.opacity = '0.5';
-        wrapper.style.pointerEvents = 'none';
-
-        this.saveToDB(checkbox)
-            .finally(() => {
-                wrapper.style.opacity = '1';
-                wrapper.style.pointerEvents = 'auto';
-            });
-    },
-
-    saveToDB(checkbox) {
-        const payload = new FormData();
-        payload.append('ajax_update', '1');
-        payload.append('student_id', checkbox.dataset.sid);
-        payload.append('week', checkbox.dataset.week);
-        payload.append('type', checkbox.dataset.type);
-        payload.append('value', checkbox.checked ? 1 : 0);
-
-        return fetch(this.config.apiEndpoint, {
-            method: 'POST',
-            body: payload
-        })
-        .then(res => res.text())
-        .then(txt => {
-            this.showToast("Saved successfully");
-        })
-        .catch(err => {
-            console.error(err);
-            this.showToast("Sync failed!", true);
-            checkbox.checked = !checkbox.checked; 
-        });
-    },
-
-    filterStudents(query) {
-        const lowerQuery = query.toLowerCase();
-        document.querySelectorAll('tbody tr').forEach(row => {
-            const text = row.querySelector('.col-sticky')?.innerText.toLowerCase() || "";
-            if (text.includes(lowerQuery)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-    },
-
-    exportToCSV() {
-        let csv = [];
-        const rows = document.querySelectorAll("table tr");
-        
-        rows.forEach(row => {
-            let cols = [];
-            if (row.querySelector('th')) {
-                row.querySelectorAll('th').forEach(th => cols.push('"' + th.innerText + '"'));
-            } 
-            else {
-                const nameCol = row.querySelector('.col-sticky');
-                cols.push('"' + (nameCol ? nameCol.innerText.replace(/\n/g, ' ').trim() : '') + '"');
-
-                const checks = row.querySelectorAll('input[type="checkbox"]');
-                checks.forEach(c => cols.push(c.checked ? "1" : "0"));
-
-                cols.push(row.querySelector('.absences')?.innerText || "0");
-            }
-            csv.push(cols.join(","));
-        });
-
-        const csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
-        const downloadLink = document.createElement("a");
-        downloadLink.download = `attendance_export_${new Date().toISOString().slice(0,10)}.csv`;
-        downloadLink.href = window.URL.createObjectURL(csvFile);
-        downloadLink.style.display = "none";
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        downloadLink.remove();
-        
-        this.showToast("Export downloaded!");
     },
 
     showToast(msg, isError = false) {
         const { toast, toastMsg } = this.dom;
         if (!toast) return;
-
         toastMsg.textContent = msg;
         toast.style.background = isError ? 'rgba(153, 27, 27, 0.95)' : 'rgba(16, 185, 129, 0.95)';
         toast.classList.add('visible');
-
         if (this.state.toastTimer) clearTimeout(this.state.toastTimer);
         this.state.toastTimer = setTimeout(() => toast.classList.remove('visible'), 2500);
     }
 };
 
 document.addEventListener('DOMContentLoaded', () => AttendanceApp.init());
+
+$(document).ready(function() {
+    
+    let myChart = null;
+
+    $('#btn-show-report').click(function() {
+        $('#report-section').fadeIn();
+        
+        let totalStudents = $('tbody tr').length;
+        let totalPresent = 0;
+        let totalParticipated = 0;
+
+        $('input[data-type="present"]:checked').each(function() { totalPresent++; });
+        $('input[data-type="participated"]:checked').each(function() { totalParticipated++; });
+
+        $('#stats-text').html(`
+            <span>Total Students: ${totalStudents}</span>
+            <span style="color:#10b981">Total Presences: ${totalPresent}</span>
+            <span style="color:#4f46e5">Total Participations: ${totalParticipated}</span>
+        `);
+
+        const ctx = document.getElementById('attendanceChart').getContext('2d');
+        
+        if(myChart) myChart.destroy();
+
+        myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Total Students', 'Total Check-ins (Present)', 'Total Participations'],
+                datasets: [{
+                    label: 'Class Activity Stats',
+                    data: [totalStudents, totalPresent, totalParticipated],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.5)',
+                        'rgba(16, 185, 129, 0.5)',
+                        'rgba(79, 70, 229, 0.5)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(16, 185, 129, 1)',
+                        'rgba(79, 70, 229, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    });
+
+    $('#btn-close-report').click(function() {
+        $('#report-section').fadeOut();
+    });
+
+    $(document).on('mouseenter', 'tbody tr', function() { $(this).addClass('jq-hover'); });
+    $(document).on('mouseleave', 'tbody tr', function() { $(this).removeClass('jq-hover'); });
+
+    $(document).on('click', 'tbody tr', function(e) {
+        if($(e.target).is('input')) return;
+        const name = $(this).find('.s-name').text();
+        const abs = $(this).find('.absences').text();
+        alert(`Student Details:\n\nName: ${name}\nAbsences: ${abs}`);
+    });
+
+    $('#btn-highlight-exc').click(function() {
+        $('tbody tr').each(function() {
+            const absCount = parseInt($(this).find('.absences').text());
+            if(absCount < 3) {
+                $(this).addClass('excellent-student');
+            } else {
+                $(this).removeClass('excellent-student');
+            }
+        });
+    });
+
+    $('#btn-reset-colors').click(function() {
+        $('tbody tr').removeClass('excellent-student');
+    });
+
+    $('#jq-search').on('keyup', function() {
+        const value = $(this).val().toLowerCase();
+        $("#student-table-body tr").filter(function() {
+            const nameText = $(this).find('.col-sticky').text().toLowerCase();
+            $(this).toggle(nameText.indexOf(value) > -1)
+        });
+    });
+
+    function sortTable(comparator) {
+        const rows = $('tbody tr').get();
+        rows.sort(comparator);
+        $.each(rows, function(index, row) {
+            $('tbody').append(row);
+        });
+    }
+
+    $('#btn-sort-abs').click(function() {
+        $('#sort-message').text('Currently sorted by: Absences (Ascending)');
+        sortTable(function(a, b) {
+            return parseInt($(a).find('.absences').text()) - parseInt($(b).find('.absences').text());
+        });
+    });
+
+    $('#btn-sort-part').click(function() {
+        $('#sort-message').text('Currently sorted by: Participation (Descending)');
+        sortTable(function(a, b) {
+            const countA = $(a).find('input[data-type="participated"]:checked').length;
+            const countB = $(b).find('input[data-type="participated"]:checked').length;
+            return countB - countA;
+        });
+    });
+
+});
