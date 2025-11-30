@@ -18,7 +18,7 @@ const AttendanceApp = {
     init() {
         this.cacheDOM();
         this.bindEvents();
-        this.loadStudents();
+        this.refreshAllStats();
     },
 
     cacheDOM() {
@@ -306,3 +306,4 @@ $(document).ready(function() {
     });
 
 });
+
